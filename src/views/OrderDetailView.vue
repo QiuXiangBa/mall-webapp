@@ -1,108 +1,91 @@
 <template>
-  <div class="app-shell">
-    <header class="detail-header">
-      <button class="back-button" type="button" @click="router.back()">返回</button>
-      <div>
-        <p class="page-kicker">配送单详情</p>
-        <h1 class="page-title">{{ detail?.orderNo || `订单 #${orderId}` }}</h1>
-      </div>
-    </header>
+  <div class="page-shell">
+    <van-nav-bar left-arrow left-text="返回" title="配送单详情" @click-left="router.back()" />
 
-    <div v-if="errorMessage" class="error-banner">{{ errorMessage }}</div>
-    <div v-if="ordersStore.detailLoading" class="empty-state">正在加载配送详情...</div>
-    <template v-else-if="detail">
-      <section class="detail-card">
-        <div class="detail-card-top">
-          <span class="status-chip">{{ detail.fulfillmentStatusText }}</span>
-          <p class="order-amount">{{ formatMoney(detail.payAmount) }}</p>
-        </div>
-        <div class="detail-grid">
+    <div class="page-shell__body">
+      <div v-if="errorMessage" class="error-banner">{{ errorMessage }}</div>
+
+      <div v-if="ordersStore.detailLoading" class="loading-wrap">
+        <van-loading size="24px">正在加载配送详情...</van-loading>
+      </div>
+
+      <template v-else-if="detail">
+        <section class="detail-hero">
           <div>
-            <span class="muted-label">配送参考号</span>
-            <p>{{ detail.dispatchRefNo || '--' }}</p>
+            <p class="detail-hero__no">{{ detail.orderNo || `订单 #${orderId}` }}</p>
+            <p class="detail-hero__status">{{ detail.fulfillmentStatusText }}</p>
           </div>
-          <div>
-            <span class="muted-label">订单件数</span>
-            <p>{{ detail.itemCount }}</p>
-          </div>
-          <div>
-            <span class="muted-label">收货人</span>
-            <p>{{ detail.receiverName || '--' }}</p>
-          </div>
-          <div>
-            <span class="muted-label">联系电话</span>
-            <p>{{ detail.deliveryPhone || '--' }}</p>
-          </div>
-          <div class="detail-grid-wide">
-            <span class="muted-label">收货地址</span>
-            <p>{{ detail.deliveryAddress || '--' }}</p>
-          </div>
-          <div>
-            <span class="muted-label">配送时间</span>
-            <p>{{ formatTimeWindow(detail.fulfillmentTimeWindow?.displayText, detail.fulfillmentTimeWindow?.dateText, detail.fulfillmentTimeWindow?.slotText) }}</p>
-          </div>
-          <div>
-            <span class="muted-label">配送选项</span>
-            <p>{{ detail.deliveryOption || '--' }}</p>
-          </div>
-          <div class="detail-grid-wide">
-            <span class="muted-label">配送备注</span>
-            <p>{{ detail.deliveryInstructions || '暂无备注' }}</p>
-          </div>
-          <div>
-            <span class="muted-label">交接时间</span>
-            <p>{{ formatDateTime(detail.handoffTime) }}</p>
-          </div>
-          <div>
-            <span class="muted-label">已送达时间</span>
-            <p>{{ formatDateTime(detail.deliveredTime) }}</p>
-          </div>
-        </div>
+          <p class="detail-hero__amount">{{ formatMoney(detail.payAmount) }}</p>
+        </section>
+
+        <van-cell-group inset class="section-group">
+          <van-cell title="配送参考号" :value="detail.dispatchRefNo || '--'" />
+          <van-cell title="订单件数" :value="String(detail.itemCount)" />
+          <van-cell title="收货人" :value="detail.receiverName || '--'" />
+          <van-cell title="联系电话" :value="detail.deliveryPhone || '--'" />
+          <van-cell title="收货地址" :label="detail.deliveryAddress || '--'" />
+          <van-cell
+            title="配送时间"
+            :label="formatTimeWindow(detail.fulfillmentTimeWindow?.displayText, detail.fulfillmentTimeWindow?.dateText, detail.fulfillmentTimeWindow?.slotText)"
+          />
+          <van-cell title="配送选项" :value="detail.deliveryOption || '--'" />
+          <van-cell title="配送备注" :label="detail.deliveryInstructions || '暂无备注'" />
+          <van-cell title="交接时间" :value="formatDateTime(detail.handoffTime)" />
+          <van-cell title="已送达时间" :value="formatDateTime(detail.deliveredTime)" />
+        </van-cell-group>
+
         <div class="action-row" v-if="canStart || canDeliver">
-          <button
+          <van-button
             v-if="canStart"
-            class="primary-button"
-            type="button"
+            type="primary"
+            round
+            block
+            :loading="ordersStore.actionLoading === 'start'"
             :disabled="ordersStore.actionLoading !== null"
             @click="handleStart"
           >
-            {{ ordersStore.actionLoading === 'start' ? '提交中...' : '开始配送' }}
-          </button>
-          <button
+            开始配送
+          </van-button>
+          <van-button
             v-if="canDeliver"
-            class="primary-button"
-            type="button"
+            type="primary"
+            round
+            block
+            :loading="ordersStore.actionLoading === 'delivered'"
             :disabled="ordersStore.actionLoading !== null"
             @click="handleDelivered"
           >
-            {{ ordersStore.actionLoading === 'delivered' ? '提交中...' : '标记已送达' }}
-          </button>
+            标记已送达
+          </van-button>
         </div>
-      </section>
 
-      <section class="timeline-card">
-        <div class="timeline-header">
-          <h2>配送轨迹</h2>
-          <p>{{ detail.latestNode || '暂无节点更新' }}</p>
-        </div>
-        <div v-if="detail.nodes.length === 0" class="empty-state compact">暂无配送轨迹</div>
-        <ol v-else class="timeline-list">
-          <li v-for="(node, index) in detail.nodes" :key="`${node.nodeTime}-${index}`" class="timeline-item">
-            <span class="timeline-dot"></span>
-            <div>
-              <p class="timeline-desc">{{ node.nodeDesc }}</p>
-              <p class="timeline-time">{{ formatDateTime(node.nodeTime) }}</p>
-            </div>
-          </li>
-        </ol>
-      </section>
-    </template>
+        <section class="timeline-panel">
+          <div class="timeline-panel__header">
+            <h2>配送轨迹</h2>
+            <p>{{ detail.latestNode || '暂无节点更新' }}</p>
+          </div>
+          <van-empty v-if="detail.nodes.length === 0" description="暂无配送轨迹" />
+          <div v-else class="timeline-steps-wrap">
+            <van-steps direction="vertical" :active="0" active-color="#ff6a2a">
+              <van-step v-for="(node, index) in detail.nodes" :key="`${node.nodeTime}-${index}`">
+                <template #active-icon>
+                  <van-icon name="checked" />
+                </template>
+                <h3 class="timeline-node__desc">{{ node.nodeDesc }}</h3>
+                <p class="timeline-node__time">{{ formatDateTime(node.nodeTime) }}</p>
+              </van-step>
+            </van-steps>
+          </div>
+        </section>
+      </template>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { showConfirmDialog, showFailToast, showSuccessToast } from 'vant';
 import { useRiderOrdersStore } from '@/stores/rider-orders';
 import { formatDateTime, formatMoney, formatTimeWindow } from '@/shared/format';
 
@@ -126,24 +109,44 @@ const loadDetail = async () => {
 };
 
 const handleStart = async () => {
-  if (!window.confirm('确认开始配送这笔订单吗？')) {
+  try {
+    await showConfirmDialog({
+      title: '开始配送',
+      message: '确认开始配送这笔订单吗？',
+      confirmButtonText: '确认开始',
+      cancelButtonText: '再等等'
+    });
+  } catch {
     return;
   }
   try {
     await ordersStore.start(orderId.value);
+    showSuccessToast('已开始配送');
   } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : '开始配送失败';
+    const message = error instanceof Error ? error.message : '开始配送失败';
+    errorMessage.value = message;
+    showFailToast(message);
   }
 };
 
 const handleDelivered = async () => {
-  if (!window.confirm('确认标记为已送达吗？')) {
+  try {
+    await showConfirmDialog({
+      title: '标记已送达',
+      message: '确认标记这笔订单为已送达吗？',
+      confirmButtonText: '确认送达',
+      cancelButtonText: '再等等'
+    });
+  } catch {
     return;
   }
   try {
     await ordersStore.markDelivered(orderId.value);
+    showSuccessToast('已标记为已送达');
   } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : '标记已送达失败';
+    const message = error instanceof Error ? error.message : '标记已送达失败';
+    errorMessage.value = message;
+    showFailToast(message);
   }
 };
 
