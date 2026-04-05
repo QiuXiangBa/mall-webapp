@@ -1,24 +1,43 @@
 <template>
-  <div class="auth-page">
-    <div class="auth-card">
-      <p class="auth-eyebrow">ZipGO Rider</p>
-      <h1 class="auth-title">骑手登录</h1>
-      <p class="auth-subtitle">使用手机号和密码登录，查看分配给你的配送单。</p>
-      <form class="auth-form" @submit.prevent="handleSubmit">
-        <label class="field">
-          <span>手机号</span>
-          <input v-model.trim="mobile" inputmode="numeric" autocomplete="tel" placeholder="请输入手机号" />
-        </label>
-        <label class="field">
-          <span>密码</span>
-          <input v-model="password" type="password" autocomplete="current-password" placeholder="请输入密码" />
-        </label>
-        <p v-if="errorMessage" class="form-error">{{ errorMessage }}</p>
-        <button class="primary-button" type="submit" :disabled="authStore.loading">
-          {{ authStore.loading ? '登录中...' : '登录' }}
-        </button>
-      </form>
+  <div class="login-shell">
+    <div class="login-hero">
+      <p class="login-kicker">ZipGO Rider</p>
+      <h1 class="login-title">骑手登录</h1>
+      <p class="login-subtitle">使用手机号和密码登录，查看分配给你的配送单。</p>
     </div>
+
+    <van-form class="login-form" @submit="handleSubmit">
+      <van-cell-group inset>
+        <van-field
+          v-model.trim="mobile"
+          name="mobile"
+          label="手机号"
+          input-align="right"
+          inputmode="numeric"
+          autocomplete="tel"
+          placeholder="请输入手机号"
+          clearable
+        />
+        <van-field
+          v-model="password"
+          name="password"
+          label="密码"
+          type="password"
+          input-align="right"
+          autocomplete="current-password"
+          placeholder="请输入密码"
+          clearable
+        />
+      </van-cell-group>
+
+      <div v-if="errorMessage" class="form-error">{{ errorMessage }}</div>
+
+      <div class="login-submit">
+        <van-button round block type="primary" native-type="submit" :loading="authStore.loading">
+          登录
+        </van-button>
+      </div>
+    </van-form>
   </div>
 </template>
 
