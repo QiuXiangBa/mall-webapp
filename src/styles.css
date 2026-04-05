@@ -102,6 +102,9 @@ textarea {
   font-size: 32px;
   line-height: 1.1;
   font-weight: 800;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+  max-width: 100%;
 }
 
 .login-subtitle,
@@ -190,6 +193,11 @@ textarea {
   justify-content: space-between;
   align-items: flex-start;
   gap: 16px;
+}
+
+.detail-hero > div:first-child {
+  min-width: 0;
+  flex: 1;
 }
 
 .detail-hero__status {
@@ -289,5 +297,14 @@ textarea {
 
   .detail-hero {
     flex-direction: column;
+  }
+
+  .detail-hero__no {
+    font-size: 24px;
+    line-height: 1.2;
+  }
+
+  .detail-hero__amount {
+    font-size: 24px;
   }
 }
